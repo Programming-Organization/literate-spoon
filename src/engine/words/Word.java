@@ -5,10 +5,11 @@ import java.util.*;
 import engine.Engine;
 import engine.things.Object;
 
-public abstract class Word {
+public class Word {
 	public ArrayList<String> synonyms;
 
 	public String value; // for use of verbs
+	public java.lang.Object represents;
 
 	public Word() {
 		synonyms = new ArrayList<String>();
@@ -17,6 +18,12 @@ public abstract class Word {
 	public Word(String list) {
 		synonyms = new ArrayList<String>();
 		addSynonyms(list);
+	}
+
+	public Word(String list, java.lang.Object o) {
+		synonyms = new ArrayList<String>();
+		addSynonyms(list);
+		represents = o;
 	}
 
 	public void perform(Word w, Engine t) {
