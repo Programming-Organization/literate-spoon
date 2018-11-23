@@ -1,13 +1,13 @@
 package engine.things;
 
-import engine.OneParamFunc;
+import engine.OneParamFunction;
 import engine.Terminal;
 
 public class Effect {
-	public OneParamFunc<Player> f;
+	public OneParamFunction<Player> f;
 	public int lifetime;
 
-	public Effect(OneParamFunc<Player> f, int lifetime, String init) {
+	public Effect(OneParamFunction<Player> f, int lifetime, String init) {
 		this.f = f;
 		this.lifetime = lifetime;
 		Terminal.println(init);

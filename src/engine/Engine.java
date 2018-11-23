@@ -1,4 +1,3 @@
-
 package engine;
 
 import java.io.File;
@@ -6,7 +5,6 @@ import java.util.*;
 
 import engine.things.Player;
 import engine.things.Effect;
-import engine.things.Entity;
 import engine.things.Object;
 import engine.words.Verb;
 import engine.words.Word;
@@ -18,7 +16,6 @@ public class Engine {
 
 	public ArrayList<Room> rooms;// can be accessed by verbs
 	private ArrayList<Word> vocabulary;
-	public ArrayList<Object> eventQueue = new ArrayList<Object>();
 	Random rand = new Random();
 
 	public Engine() {
@@ -26,77 +23,10 @@ public class Engine {
 		protag.setHealth(100);
 
 		rooms = new ArrayList<Room>();
-
-		rooms.add(new Room(0, 0, 0));
-
-		Object o = new Object("red [brick]", "on a", null);
-		o.injury = Object.type.shatters;
-		Object reference = new Object("nice hand-knitted [carpet]", o, null);
-		o.reference = reference;
-		rooms.get(0).objects.add(o);
-
-		o = new Object("deformed [spider]", "on", null);
-		o.injury = Object.type.squishes;
-		reference = new Object("your [face]", o, null);
-		reference.abstractNoun();
-		o.reference = reference;
-		rooms.get(0).objects.add(o);
-
-		o = Consumable("dead [corpse]", "lying on", null, 10);
-		o.injury = Object.type.bruises;
-		o.holdable = null;
-		reference = new Object("the [floor]", o, null);
-		reference.abstractNoun();
-		o.reference = reference;
-		rooms.get(0).objects.add(o);
-
-		o = new Object("old wooden [bookshelf]", "in", null);
-		o.injury = Object.type.shatters;
-		o.holdable = null;
-		o.container.addAll(Arrays.asList(new Object("dusty old [book]", o, null),
-				new Object("trigonometry [textbook]", o, null), new Object("[jar] full of candy", o, null)));
-		reference = new Object("the back of the [room]", o, null);
-		reference.abstractNoun();
-		o.reference = reference;
-		rooms.get(0).objects.add(o);
-		
-		Entity e = new Entity("an old [man]", "standing in front of", 
-				(Player p, Engine e1) -> {
-					Terminal.print("The old man says hi.");
-					}, 
-				(Engine e2) -> {
-					Terminal.println("The old man dies. He leaves you a corpse as a parting gift.");
-					Object obj = Consumable("dead [corpse]", "lying on", null, 10);
-					obj.injury = Object.type.bruises;
-					obj.holdable = null;
-					Object ref = new Object("the [floor]", obj, null);
-					ref.abstractNoun();
-					obj.reference = ref;
-					eventQueue.add(obj);
-					});
-		reference = new Object("[you]", o, null);
-		reference.abstractNoun();
-		e.reference = reference;
-		rooms.get(0).objects.add(e);
-
-		ArrayList<Object> references = new ArrayList<Object>();
-		for (Room r : rooms) {
-			Iterator<Object> it = r.objects.iterator();
-			while (it.hasNext()) {
-				Object obj = it.next();
-				if (obj.reference != null) {
-					references.add(obj.reference);
-				}
-				if (!obj.container.isEmpty()) {
-					references.addAll(obj.container);
-				}
-			}
-		}
-		for (Room r : rooms) {
-			r.objects.addAll(references);
-		}
-
-
+		//rooms.add(new Room(0, 0, 0, "This is a room"));
+		//rooms.get(0).objects.add(new Object("red [brick]", "on a nice hand-knitted carpet"));
+		//rooms.get(0).objects.add(new Object("soft and tender [spider]", "on your face"));
+		//rooms.get(0).objects.add(Consumable("small [baby] wearing a wool sweater", "sitting on a chair", 10));
 		vocabulary = new ArrayList<Word>();
 	}
 	
@@ -182,38 +112,15 @@ public class Engine {
 		vocabulary.add(v);
 	}
 
-
-	public Object Consumable(String accessor, String descriptor, String inspection, int consumability) {
-		Object o = new Object(accessor, descriptor, inspection);
+	public static Object Consumable(String accessor, String descriptor, int consumability) {
+		Object o = new Object(accessor, descriptor);
 		o.consumability = consumability;
 		return o;
 	}
 
-	public String uRandOf(String[] s) {
+	public String randOf(String[] s) {
 		int x = rand.nextInt(s.length);
-
-		// Convert 'a's to 'an's
-		for (int i = 2; i < s[x].length(); i++) {
-			ArrayList<Character> vowels = new ArrayList<Character>(Arrays.asList('a', 'e', 'i', 'o', 'u'));
-			if (vowels.contains(s[x].charAt(i)) && s[x].charAt(i - 2) == 'a' && s[x].charAt(i - 1) == ' '
-					&& s[x].charAt(i - 3) == ' ') {
-				s[x] = s[x].substring(0, i - 2) + "an" + s[x].substring(i - 1, s[x].length());
-			}
-		}
 		return s[x].substring(0, 1).toUpperCase() + s[x].substring(1, s[x].length());
-	}
-
-	public String lRandOf(String[] s) {
-		int x = rand.nextInt(s.length);
-		// Convert 'a's to 'an's
-		for (int i = 2; i < s[x].length(); i++) {
-			ArrayList<Character> vowels = new ArrayList<Character>(Arrays.asList('a', 'e', 'i', 'o', 'u'));
-			if (vowels.contains(s[x].charAt(i)) && s[x].charAt(i - 2) == 'a' && s[x].charAt(i - 1) == ' '
-					&& s[x].charAt(i - 3) == ' ') {
-				s[x] = s[x].substring(0, i - 2) + "an" + s[x].substring(i - 1, s[x].length());
-			}
-		}
-		return s[x].toLowerCase();
 	}
 
 	public void updatePlayerState() {
@@ -236,13 +143,13 @@ public class Engine {
 	}
 
 	public void update() {
+		Terminal.println(protag);
+
 		String userText;
 		ArrayList<String> words;
 
 		while (true) {// repeats until valid command
-
-			eventQueue.clear();
-
+			boolean foundRoom = false;
 			for (Room r : rooms) {
 				if (r.toString().equals(protag.toString())) {
 					protag.currentRoom = r;
@@ -262,132 +169,10 @@ public class Engine {
 				Terminal.println("Currently not in any room!");
 			
 			for (Object o : protag.currentRoom.objects) {
-
-				if (o.health != null && o.health <= 0) {
-					for (Object obj : o.container) {
-						obj.reference = new Object("the [floor]", o, null);
-						obj.description = lRandOf(new String[] { "lying", "sitting", "resting" }) + " on the";
-
-					}
-					o.container.clear();
-				}
-			}
-			int x1 = 0;
-			int x2 = 0;
-			Iterator<Object> objectIt = protag.currentRoom.objects.iterator();
-			while(objectIt.hasNext()) {
-				Object o = objectIt.next();
-				if(o.alive && o.health <= 0) {
-					if(o.getClass().getSimpleName().equals("Entity")) {
-						Entity e = (Entity)o;
-						e.death.accept(this);
-						for(Object obj : e.inventory) {
-							Object ref = new Object("the [floor]", obj, null);
-							ref.abstractNoun();
-							obj.reference = ref; 
-							eventQueue.add(obj);
-						}
-						objectIt.remove();
-					}
-				}
-			}
-			protag.currentRoom.objects.addAll(eventQueue);
-			for (int i = 0; i < protag.currentRoom.objects.size(); i++) {
-				Object o = protag.currentRoom.objects.get(i);
-				String compSub = o.compSub;
-				if (o.health != null && o.health < o.maxHealth) {
-					int p = (int) (((float) o.health / (float) o.maxHealth) * 4);
-					switch (o.injury) {
-					case crumples:
-						compSub = (p == 3 ? "dented " : p == 2 ? "bent " : p == 1 ? "crumpled-up " : "crushed ")
-								+ o.accessor;
-						break;
-					case shatters:
-						compSub = (p == 3 ? "fractured " : p > 0 ? "cracked " : "shattered ") + o.accessor;
-						break;
-					case squishes:
-						compSub = (p == 3 ? "bruised " : p == 2 ? "squashed " : p == 1 ? "compressed " : "trampled ")
-								+ o.accessor;
-						break;
-					case bruises:
-						compSub = (p == 3 ? "bruised " : p == 2 ? "damaged " : p == 1 ? "beaten-up " : "pulverized ")
-								+ o.accessor;
-						break;
-					}
-				}
-				if(protag.hunger > 0) {
-					if(rand.nextInt(101 - protag.hunger) < 5 && o.reference != null) {
-						compSub = lRandOf(new String[] { "possibly edible", "juicy and tender", "appetizing", "delicious-looking", "scrumptious"}) + " " + compSub;
-					}
-				}
-				
-				int n = i + 1;
-				String s = null;
-				while (s == null) {
-					try {
-					s = protag.currentRoom.objects.get(n).reference.accessor;
-						if (s.equals(o.reference.accessor)) {
-							x1 = 2;
-						}
-						break;
-					} catch (NullPointerException e) {
-						
-					} catch(IndexOutOfBoundsException e) {
-						break;
-					}
-					n++;
-				}
-				n = i - 1;
-				s = null;
-				while (s == null) {
-					try {
-					s = protag.currentRoom.objects.get(n).reference.accessor;
-						if (s.equals(o.reference.accessor)) {
-							x2 = 1;
-						}
-						break;
-					} catch (NullPointerException e) {
-						
-					} catch(IndexOutOfBoundsException e) {
-						break;
-					}
-					n--;
-				}
-
-				try {
-					Object r = o.reference;
-					if (x1 == 1) {
-						if(x2 == 0) {
-						Terminal.print(lRandOf(
-								new String[] { " as well as a " + compSub + " " + o.description + " " + r.compSub,
-										" and a " + compSub + " " + o.description + " " + r.compSub }));
-						} else {
-							Terminal.print(", and a " + compSub + " " + o.description + " " + r.compSub);
-						}
-					} else if (x1 == 2) {
-						if(x2 == 0) {
-						Terminal.print(
-								uRandOf(new String[] { "there is a " + compSub, "You notice a " + compSub }));
-						} else {
-							Terminal.print(", a " + compSub);
-						}
-					} else {
-						Terminal.print(uRandOf(
-								new String[] { "there is a " + compSub + " " + o.description + " " + r.compSub,
-										o.description + " " + r.compSub + ", there is a " + compSub,
-										"You notice a " + compSub + " " + o.description + " " + r.compSub }));
-					}
-					if (x1 > 0) {
-						x1--;
-					}
-					if (x1 == 0) {
-						x2 = 0;
-						Terminal.print(". ");
-					}
-				} catch (NullPointerException e) {
-
-				}
-
+				Terminal.print(randOf(new String[] { "There is a " + o.compSub + " " + o.description,
+						o.description + ", there is a " + o.compSub,
+						"You notice a " + o.compSub + " " + o.description }));
+				Terminal.print(". ");
 			}
 			Terminal.print("\n");
 
@@ -400,7 +185,7 @@ public class Engine {
 				words.add(str);// user text goes to array of words
 			}
 			if (words.size() != 2) {
-				Terminal.println("All commands must be 2 words.");
+				Terminal.println("All commands must be 2 words");
 				continue;
 			}
 
@@ -443,13 +228,6 @@ public class Engine {
 				}
 			}
 
-			for (Object o : protag.inventory) {
-				if (o.accessor.equals(words.get(1))) {
-					o1 = o;
-					foundObject = true;
-				}
-			}
-
 			if (!found && !foundObject) {
 				Terminal.println("I don't know what '" + words.get(1) + "' means.");
 				continue;
@@ -469,12 +247,12 @@ public class Engine {
 			}
 
 			updatePlayerState();
-			Iterator<Effect> effectIt = protag.effects.iterator();
-			while (effectIt.hasNext()) {
-				Effect e = effectIt.next();
+			Iterator<Effect> it = protag.effects.iterator();
+			while (it.hasNext()) {
+				Effect e = it.next();
 				e.affect(protag);
 				if (e.lifetime == 0) {
-					effectIt.remove();
+					it.remove();
 				}
 			}
 			break;
