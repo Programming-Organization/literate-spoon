@@ -22,8 +22,8 @@ public class Terminal {
 		return new Scanner(System.in).nextLine();
 	}
 	public static void printText(String s) {
-		s = s.replace("(", "@").replace(")", "@");
-		String[] strs = s.split("@");
+		s = s.replace("(", "∆").replace(")", "∆");
+		String[] strs = s.split("∆");
 		System.out.print(strs[0]);
 		for(int i = 1; i < strs.length; i += 2) {
 			int n = Integer.parseInt(strs[i]);

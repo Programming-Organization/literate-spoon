@@ -21,8 +21,11 @@ public class Engine {
 
 	private ArrayList<Word> vocabulary;
 	private ArrayList<String> prepositions;
+	private ArrayList<String> omitWords;
 	public ArrayList<Object> objectQueue = new ArrayList<Object>();
 	Random rand = new Random();
+
+	public boolean changedSurroundings = true;
 
 	public Engine() {
 		protag = new Player(0, 0);
@@ -37,7 +40,11 @@ public class Engine {
 		prepositions = new ArrayList<String>(
 				Arrays.asList(new String[] { "aboard", "about", "above", "across", "after", "against", "along", "amid",
 						"among", "around", "as", "at", "before", "behind", "below", "beside", "between", "by", "down",
-						"in", "inside", "into", "near", "on", "through", "to", "toward", "towards", "under", "with" }));
+						"in", "inside", "into", "my", "near", "on", "the", "through", "to", "toward", "towards", "under", "with", "your"}));
+		omitWords = new ArrayList<String>(
+				Arrays.asList(new String[] {"up", "down"}));
+
+
 	}
 
 	public void addWord(Word v) {
@@ -98,10 +105,122 @@ public class Engine {
 		}
 	}
 
-	public void update() {
-		String userText;
-		ArrayList<String> words;
+	public void inspectRoom() {
+		if (protag.currentRoom != null) {
+			Room holder = protag.currentRoom;
+			String desc = holder.description;
+			while (holder.fatherRoom != null) {
+				holder = holder.fatherRoom;
+				desc = holder.description + ": " + desc;
+			}
 
+			Terminal.println(desc);
+		} else
+			Terminal.println("Currently not in any room!");
+
+		int x1 = 0;
+		int x2 = 0;
+
+		for (int i = 0; i < protag.currentRoom.objects.size(); i++) {
+			Object o = protag.currentRoom.objects.get(i);
+			String compSub = o.compSub;
+			if (o.health != null && o.health < o.maxHealth) {
+				int p = (int) (((float) o.health / (float) o.maxHealth) * 4);
+				switch (o.injury) {
+				case crumples:
+					compSub = (p == 3 ? "dented " : p == 2 ? "bent " : p == 1 ? "crumpled-up " : "crushed ")
+							+ o.accessor;
+					break;
+				case shatters:
+					compSub = (p == 3 ? "fractured " : p > 0 ? "cracked " : "shattered ") + o.accessor;
+					break;
+				case squishes:
+					compSub = (p == 3 ? "bruised " : p == 2 ? "squashed " : p == 1 ? "compressed " : "trampled ")
+							+ o.accessor;
+					break;
+				case bruises:
+					compSub = (p == 3 ? "bruised " : p == 2 ? "damaged " : p == 1 ? "beaten-up " : "pulverized ")
+							+ o.accessor;
+					break;
+				}
+			}
+			if (protag.hunger > 0) {
+				if (rand.nextInt(101 - protag.hunger) < 5 && o.reference != null) {
+					compSub = lRandOf(new String[] { "possibly edible", "juicy and tender", "appetizing",
+							"delicious-looking", "scrumptious" }) + " " + compSub;
+				}
+			}
+
+			int n = i + 1;
+			String s = null;
+			while (s == null) {
+				try {
+					s = protag.currentRoom.objects.get(n).reference.accessor;
+					if (s.equals(o.reference.accessor)) {
+						x1 = 2;
+					}
+					break;
+				} catch (NullPointerException e) {
+
+				} catch (IndexOutOfBoundsException e) {
+					break;
+				}
+				n++;
+			}
+			n = i - 1;
+			s = null;
+			while (s == null) {
+				try {
+					s = protag.currentRoom.objects.get(n).reference.accessor;
+					if (s.equals(o.reference.accessor)) {
+						x2 = 1;
+					}
+					break;
+				} catch (NullPointerException e) {
+
+				} catch (IndexOutOfBoundsException e) {
+					break;
+				}
+				n--;
+			}
+
+			try {
+				Object r = o.reference;
+				if (x1 == 1) {
+					if (x2 == 0) {
+						Terminal.print(lRandOf(
+								new String[] { " as well as a " + compSub + " " + o.description + " " + r.compSub,
+										" and a " + compSub + " " + o.description + " " + r.compSub }));
+					} else {
+						Terminal.print(", and a " + compSub + " " + o.description + " " + r.compSub);
+					}
+				} else if (x1 == 2) {
+					if (x2 == 0) {
+						Terminal.print(
+								uRandOf(new String[] { "there is a " + compSub, "You notice a " + compSub }));
+					} else {
+						Terminal.print(", a " + compSub);
+					}
+				} else {
+					Terminal.print(
+							uRandOf(new String[] { "there is a " + compSub + " " + o.description + " " + r.compSub,
+									o.description + " " + r.compSub + ", there is a " + compSub,
+									"You notice a " + compSub + " " + o.description + " " + r.compSub }));
+				}
+				if (x1 > 0) {
+					x1--;
+				}
+				if (x1 == 0) {
+					x2 = 0;
+					Terminal.println(".");
+				}
+			} catch (NullPointerException e) {
+
+			}
+		}
+	}
+
+	public void runObjects() {
 		objectQueue.clear();
 		for (Object o : protag.currentRoom.objects) {
 			if (o.health != null && o.health <= 0) {
@@ -113,6 +232,18 @@ public class Engine {
 				o.container.clear();
 			}
 		}
+
+		for (Object o : protag.inventory) {
+			if (o.health != null && o.health <= 0) {
+				for (Object obj : o.container) {
+					obj.reference = protag.currentRoom.floor;
+					obj.description = lRandOf(new String[] { "lying", "sitting", "resting" }) + " on";
+
+				}
+				o.container.clear();
+			}
+		}
+
 		Iterator<Object> objectIt = protag.currentRoom.objects.iterator();
 		while (objectIt.hasNext()) {
 			Object o = objectIt.next();
@@ -147,181 +278,92 @@ public class Engine {
 			}
 		}
 		protag.currentRoom.objects.addAll(objectQueue);
-		outerloop: while (true) {// repeats until valid command
+	}
 
-			Terminal.println(protag.health > 90 ? ""
-					: protag.health > 50 ? "You are feeling slightly injured."
-							: protag.health > 0
-									? "You think that you might have some injuries, but you've forgotten where."
-									: "You feel slightly dead, but you aren't sure.");
+	public void update() {
+		String userText;
 
-			if (protag.currentRoom != null) {
-				Room holder = protag.currentRoom;
-				String desc = holder.description;
-				while (holder.fatherRoom != null) {
-					holder = holder.fatherRoom;
-					desc = holder.description + ": " + desc;
-				}
+		if (changedSurroundings) {
+			inspectRoom();
+			changedSurroundings = false;
+		}
 
-				Terminal.println(desc);
-			} else
-				Terminal.println("Currently not in any room!");
+		runObjects();
 
-			int x1 = 0;
-			int x2 = 0;
 
-			for (int i = 0; i < protag.currentRoom.objects.size(); i++) {
-				Object o = protag.currentRoom.objects.get(i);
-				String compSub = o.compSub;
-				if (o.health != null && o.health < o.maxHealth && o.injury != null) {
-					int p = (int) (((float) o.health / (float) o.maxHealth) * 4);
-					switch (o.injury) {
-					case crumples:
-						compSub = (p == 3 ? "dented " : p == 2 ? "bent " : p == 1 ? "crumpled-up " : "crushed ")
-								+ o.accessor;
-						break;
-					case shatters:
-						compSub = (p == 3 ? "fractured " : p > 0 ? "cracked " : "shattered ") + o.accessor;
-						break;
-					case squishes:
-						compSub = (p == 3 ? "bruised " : p == 2 ? "squashed " : p == 1 ? "compressed " : "trampled ")
-								+ o.accessor;
-						break;
-					case bruises:
-						compSub = (p == 3 ? "bruised " : p == 2 ? "damaged " : p == 1 ? "beaten-up " : "pulverized ")
-								+ o.accessor;
-						break;
-					}
-				}
-				String rCompSub = "";
-				if (o.reference != null) {
-					rCompSub = o.reference.compSub;
-					if (o.reference.health != null && o.reference.health < o.reference.maxHealth
-							&& o.reference.injury != null) {
-						int p = (int) (((float) o.reference.health / (float) o.reference.maxHealth) * 4);
-						switch (o.reference.injury) {
-						case crumples:
-							rCompSub = (p == 3 ? "dented " : p == 2 ? "bent " : p == 1 ? "crumpled-up " : "crushed ")
-									+ o.reference.accessor;
-							break;
-						case shatters:
-							rCompSub = (p == 3 ? "fractured " : p > 0 ? "cracked " : "shattered ")
-									+ o.reference.accessor;
-							break;
-						case squishes:
-							rCompSub = (p == 3 ? "bruised "
-									: p == 2 ? "squashed " : p == 1 ? "compressed " : "trampled ")
-									+ o.reference.accessor;
-							break;
-						case bruises:
-							rCompSub = (p == 3 ? "bruised "
-									: p == 2 ? "damaged " : p == 1 ? "beaten-up " : "pulverized ")
-									+ o.reference.accessor;
-							break;
-						}
-					}
-				}
-				if (protag.hunger > 0) {
-					if (rand.nextInt(101 - protag.hunger) < 2 && o.reference != null) {
-						compSub = lRandOf(new String[] { "possibly edible", "juicy and tender", "appetizing",
-								"delicious-looking", "scrumptious" }) + " " + compSub;
-					}
-				}
+		Terminal.println(protag.health > 90 ? ""
+				: protag.health > 50 ? "You are feeling slightly injured."
+						: protag.health > 0
+								? "You think that you might have some injuries, but you've forgotten where."
+								: "You feel slightly dead, but you aren't sure.");
 
-				int n = i + 1;
-				String s = null;
-				while (s == null) {
-					try {
-						s = protag.currentRoom.objects.get(n).reference.accessor;
-						if (s.equals(o.reference.accessor)) {
-							x1 = 2;
-						}
-						break;
-					} catch (NullPointerException e) {
+		outerloop:
+		while (true) {// repeats until valid command
 
-					} catch (IndexOutOfBoundsException e) {
-						break;
-					}
-					n++;
-				}
-				n = i - 1;
-				s = null;
-				while (s == null) {
-					try {
-						s = protag.currentRoom.objects.get(n).reference.accessor;
-						if (s.equals(o.reference.accessor) && x1 == 2) {
-							x2 = 1;
-						}
-						break;
-					} catch (NullPointerException e) {
 
-					} catch (IndexOutOfBoundsException e) {
-						break;
-					}
-					n--;
-				}
-
-				Object r = o.reference;
-				if (r != null) {
-					if (x1 == 1) {
-						if (x2 == 0) {
-							Terminal.print(lRandOf(
-									new String[] { " as well as a " + compSub + " " + o.description + " " + rCompSub,
-											" and a " + compSub + " " + o.description + " " + rCompSub }));
-						} else {
-							Terminal.print(", and a " + compSub + " " + o.description + " " + rCompSub);
-						}
-					} else if (x1 == 2) {
-						if (x2 == 0) {
-							Terminal.print(
-									uRandOf(new String[] { "there is a " + compSub, "You notice a " + compSub }));
-						} else {
-							Terminal.print(", a " + compSub);
-						}
-					} else {
-						Terminal.print(
-								uRandOf(new String[] { "there is a " + compSub + " " + o.description + " " + rCompSub,
-										o.description + " " + rCompSub + ", there is a " + compSub,
-										"You notice a " + compSub + " " + o.description + " " + rCompSub }));
-					}
-					if (x1 > 0) {
-						x1--;
-					}
-					if (x1 == 0) {
-						x2 = 0;
-						Terminal.println(".");
-					}
-				}
-			}
 
 			Terminal.print("\n");
 
 			userText = Terminal.readln();
 			userText = userText.toLowerCase();
-			String prepositionUsed = "";
-			for (String str : prepositions) {
-				if (userText.contains(" " + str + " ")) {
-					prepositionUsed = " " + str;
-				}
+
+			for (String str : omitWords) {
 				userText = userText.replace(" " + str + " ", " ");
 			}
-			words = new ArrayList<String>();
 
-			String[] s = userText.split(" ");
-			for (String str : s) {
+			String[] parts = userText.split("with");
+
+			String[] prepUsed = new String[parts.length];
+
+			for (int i = 0; i < parts.length; i++) {//probably some of the ugliest code (by me) in my life, but it works
+				prepUsed[i] = "";
+				int w = 0;
+				while (true) {
+					for (String str: prepositions) {
+						if (parts[i].substring(w, parts[i].substring(w).indexOf(' ') == -1? parts[i].length(): parts[i].substring(w).indexOf(' ') + w).equals(str)) {
+							prepUsed[i] += " " + str;
+							parts[i] = parts[i].substring(0, w).trim() + " " + parts[i].substring(parts[i].substring(w).indexOf(' ') == -1? parts[i].length(): parts[i].substring(w).indexOf(' ') + w).trim();
+							//System.out.println("1: " + parts[i]);
+							break;
+						}
+					}
+
+					if (parts[i].substring(w).indexOf(' ') == -1)
+						break;
+
+					w = parts[i].substring(w).indexOf(' ') + 1;
+				}
+			}
+
+			//words = new ArrayList<String>();
+
+			ArrayList<String> words = new ArrayList<String>();
+			words.addAll(Arrays.asList(parts[0].split(" ")));
+			if (words.size() > 2) {
+				Terminal.println("What do you mean?");
+				continue;
+			}
+
+			for (int i = 1; i < parts.length; i++)
+				words.addAll(Arrays.asList(parts[i].trim().split(" ")));
+
+			//System.out.println(words);
+
+			/*for (String str : s) {
 				if (!str.isEmpty()) {
 					words.add(str);// user text goes to array of words
 				}
-			}
+			}*/
 
-			if (words.size() != 2) {
+			/*if (words.size() != 2) {
 				Terminal.println("All commands must be 2 words.");
 				continue;
-			}
+			}*/
 
 			Word w0 = null;
 			Word w1 = null;
 			Object o1 = null;
+			Object o2 = null;
 			boolean found = false;
 			boolean foundObject = false;
 
@@ -377,11 +419,8 @@ public class Engine {
 					o1 = o;
 					foundObject = true;
 				}
-				for (Object obj : o.container) {
-					if (obj.accessor.equals(words.get(1))) {
-						o1 = obj;
-						foundObject = true;
-					}
+				if (words.size() > 2 && o.accessor.equals(words.get(2))) {
+					o2 = o;
 				}
 			}
 
@@ -416,9 +455,18 @@ public class Engine {
 			}
 
 			if (found) {
-				w0.perform(w1, prepositionUsed, this);// fills out word's function
+				try {
+					w0.perform(w1, this);// fills out word's function
+				} catch(Exception exc) {
+					Terminal.println(uRandOf(new String[] {"I'm not sure what you want me to do.", "Who, me?", "Error. Please try again.", "This isn't going to work out."}));
+					continue;
+				}
 			} else if (foundObject) {
-				w0.perform(o1, prepositionUsed, this);
+				if (o2 == null)
+					w0.perform(o1, prepUsed[0], this);
+				else {
+					w0.perform(o1, o2, prepUsed[0], prepUsed[1], this);
+				}
 			}
 
 			updatePlayerState();

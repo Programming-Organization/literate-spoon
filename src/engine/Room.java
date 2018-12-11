@@ -28,6 +28,7 @@ public class Room {
 		coords[0] = x;
 		coords[1] = y;
 		floor.abstractNoun();
+		objects.add(floor);
 		this.description = description;
 	}
 	

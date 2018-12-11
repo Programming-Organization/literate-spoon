@@ -16,22 +16,27 @@ public class Player extends Object {
 	public int intelligence = 10;
 	public int agility = 10;
 	public int charisma = 10;
+	public int literacy = 0;
 	public Object rightHand;
+	public Object weapon;
+	public Object fist = new Object("[fist]", (String) null, null);
 
 	public Player(int x, int y) {
 		super("[player]", (String)null, null);
-		/*pos = new int[2];
-		pos[0] = x;
-		pos[1] = y;*/
+		
+		fist.abstractNoun();
+		inventory.add(fist);
+		weapon = fist;
+		
+		Object o = new Object("[foot]", (String) null, null);
+		o.abstractNoun();
+		inventory.add(o);
+		
+		o = new Object("[head]", (String) null, null);
+		o.playerDamage = 2;
+		o.abstractNoun();
+		inventory.add(o);
+		
 		alive = true;
 	}
-
-	/*public void changePos(String amt) {// amt example in Direction class
-		pos[0] += Integer.parseInt(amt.substring(0, 1)) - 1;
-		pos[1] += Integer.parseInt(amt.substring(1, 2)) - 1;
-	}*/
-
-	/*public String toString() {
-		return pos[0] + ", " + pos[1];
-	}*/
 }

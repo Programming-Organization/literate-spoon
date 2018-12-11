@@ -9,11 +9,14 @@ public class Object {
 	public String description;
 	public ArrayList<Object> container = new ArrayList<Object>();
 	public String inspection;
+	public String text = "";
 	public Object reference;
 	public Object referencer;
 	public Integer consumability = -5;
 	public Integer drinkability = null;
 	public Boolean holdable = true;
+	public Integer damage = 1;
+	public Integer playerDamage = 0;
 	public Integer health = 10;
 	public Integer maxHealth = 10;
 	public boolean abstractObj = false;
