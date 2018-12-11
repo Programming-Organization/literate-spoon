@@ -17,7 +17,8 @@ public class Engine {
 
 	// public ArrayList<Room> rooms;// can be accessed by verbs
 	public Room worldMap;
-	public final String worldName = "Azaroth";// just a random name (thank Liam)
+	public final String worldName = "Azeroth";// just a random name (thank Liam)
+	//hey liam this is nico: it's Azeroth you dummy. With an a it's the goddess from some book.
 
 	private ArrayList<Word> vocabulary;
 	private ArrayList<String> prepositions;
@@ -38,17 +39,15 @@ public class Engine {
 
 		vocabulary = new ArrayList<Word>();
 		prepositions = new ArrayList<String>(
-				Arrays.asList(new String[] { "aboard", "about", "above", "across", "after", "against", "along", "amid",
-						"among", "around", "as", "at", "before", "behind", "below", "beside", "between", "by", "down",
-						"in", "inside", "into", "my", "near", "on", "the", "through", "to", "toward", "towards", "under", "with", "your"}));
+			Arrays.asList(new String[] { "aboard", "about", "above", "across", "after", "against", "along", "amid",
+				"among", "around", "as", "at", "before", "behind", "below", "beside", "between", "by", "down",
+				"in", "inside", "into", "my", "near", "on", "the", "through", "to", "toward", "towards", "under", "with", "your"}));
 		omitWords = new ArrayList<String>(
 				Arrays.asList(new String[] {"up", "down"}));
-
-
 	}
 
 	public void addWord(Word v) {
-		vocabulary.add(v);
+	 vocabulary.add(v);
 	}
 
 	public static Object Consumable(String accessor, String descriptor, String inspection, int consumability) {
@@ -100,7 +99,7 @@ public class Engine {
 				Terminal.println("Intuition tells you that you might want to drink something.");
 			}
 		}
-		if (protag.thirst < 20 && protag.hunger < 20) {
+		if (protag.hunger < 20 && protag.thirst < 20) {
 			protag.health += protag.health < protag.maxHealth && protag.health > 0 ? 1 : 0;
 		}
 	}
@@ -226,7 +225,7 @@ public class Engine {
 			if (o.health != null && o.health <= 0) {
 				for (Object obj : o.container) {
 					obj.reference = protag.currentRoom.floor;
-					obj.description = lRandOf(new String[] { "lying", "sitting", "resting" }) + " on";
+					obj.description = lRandOf(new String[] { "lying", "sitting", "resting"}) + " on";
 
 				}
 				o.container.clear();
@@ -250,24 +249,15 @@ public class Engine {
 			if (o.alive && o.health <= 0) {
 				if (o.getClass().getSimpleName().equals("Entity")) {
 					Entity e = (Entity) o;
-					int s = objectQueue.size();
 					e.death.accept(this);
 					for (Object obj : e.inventory) {
-						if (objectQueue.size() != s) {
-							objectQueue.get(s).container.addAll(e.inventory);
-						} else {
-							obj.reference = protag.currentRoom.floor;
-							obj.description = "on";
-							objectQueue.add(obj);
-						}
+						Object ref = new Object("the [floor]", obj, null);
+						ref.abstractNoun();
+						obj.reference = ref;
+						objectQueue.add(obj);
 					}
 					objectIt.remove();
 				}
-			} else if (!o.alive && o.health <= 0) {
-				for (Object obj : o.container) {
-					objectQueue.add(obj);
-				}
-				o.container.clear();
 			}
 		}
 		for (Object o : protag.currentRoom.objects) {
@@ -406,12 +396,6 @@ public class Engine {
 					o1 = o;
 					foundObject = true;
 				}
-				for (Object obj : o.container) {
-					if (obj.accessor.equals(words.get(1))) {
-						o1 = obj;
-						foundObject = true;
-					}
-				}
 			}
 
 			for (Object o : protag.inventory) {
@@ -425,8 +409,7 @@ public class Engine {
 			}
 
 			if (!found && !foundObject) {
-				String str = (" " + protag.currentRoom.description.replace(".", " ").replace(",", " ").replace(";", " ")
-						.replace(":", " ") + " ").toLowerCase();
+				String str = (" " + protag.currentRoom.description.replace(".", " ").replace(",", " ").replace(";", " ").replace(":", " ") + " ").toLowerCase();
 				if (str.contains(" " + words.get(1) + " ")) {
 
 					Terminal.println("No.");
