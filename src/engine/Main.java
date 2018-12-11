@@ -14,7 +14,11 @@ public class Main {
 	public static Engine game;
 
 	public static void main(String args[]) {
+		Terminal.print("Loading, please wait");
+
 		game = new Engine();
+
+		Terminal.print(".");
 
 		game.addWord(new Verb("move go walk run climb jog travel journey venture", (Word w, Engine t) -> {
 			if (w.getClass() != Direction.class) {
@@ -28,6 +32,8 @@ public class Main {
 			int dy = Integer.parseInt(w.value.substring(1, 2)) - 1;
 
 			Room currentRoom = t.protag.currentRoom;
+
+			Terminal.print(".");
 
 			while (true) {//recursion without recursion
 				x = t.protag.currentRoom.coords[0];
@@ -69,6 +75,10 @@ public class Main {
 
 			//t.protag.changePos(w.value);
 		}, null));
+
+
+		Terminal.print(".");
+
 		game.addWord(new Verb("eat consume", null, (Object o, Engine t) -> {
 			if (!o.alive) {
 				t.protag.hunger -= o.consumability;
@@ -95,6 +105,9 @@ public class Main {
 				boolean b = (Boolean) null;
 			}
 		}));
+
+		Terminal.print(".");
+
 		game.addWord(new Verb("drink", null, (Object o, Engine t) -> {
 			if (!o.alive) {
 				t.protag.thirst -= o.drinkability;
@@ -110,6 +123,9 @@ public class Main {
 				boolean b = (Boolean) null;
 			}
 		}));
+
+		Terminal.print(".");
+
 		game.addWord(new Verb("inspect investigate examine scrutinize study observe", null, (Object o, Engine t) -> {
 			if (o.container.isEmpty()) {
 				Terminal.print(t.uRandOf(new String[] { "Upon inspection, you realize that " + o.inspection,
@@ -132,12 +148,18 @@ public class Main {
 			}
 			Terminal.println(".");
 		}));
+
+		Terminal.print(".");
+
 		game.addWord(new Verb("interact talk speak converse negotiate chat gossip", null, (Object o, Engine t) -> {
 			if (o.alive) {
 				Entity e = (Entity) o;
 				e.interaction.accept(t.protag, t);
 			}
 		}));
+
+		Terminal.print(".");
+
 		game.addWord(new Verb("attack assault assail punch hit kick pummel strike kill", null, (Object o, Engine t) -> {
 			o.health -= t.protag.strength;
 			if (o.alive) {
@@ -151,7 +173,10 @@ public class Main {
 			}
 			Terminal.println("You attacked the " + o.accessor + ".");
 		}));
-		game.addWord(new Verb("hold", null, (Object o, Engine t) -> {
+
+		Terminal.print(".");
+
+		game.addWord(new Verb("hold equip", null, (Object o, Engine t) -> {
 			boolean b = o.holdable;
 			if (t.protag.inventory.contains(o)) {
 				if (t.protag.rightHand != null)
@@ -169,6 +194,9 @@ public class Main {
 				b = (Boolean) null;
 			}
 		}));
+
+		Terminal.print(".");
+
 		game.addWord(new Verb("take get steal grab seize apprehend liberate collect", null, (Object o, Engine t) -> {
 			boolean b = o.holdable;
 			if (o.alive) {
@@ -183,6 +211,9 @@ public class Main {
 				b = (Boolean) null;
 			}
 		}));
+
+		Terminal.print(".");
+
 		game.addWord(new Verb("drop leave", null, (Object o, Engine t) -> {
 			if (t.protag.inventory.contains(o)) {
 				t.protag.inventory.remove(o);
@@ -194,6 +225,8 @@ public class Main {
 				Terminal.println("You don't have a " + o.accessor + " to drop.");
 			}
 		}));
+
+		Terminal.print(".");
 
 		game.addWord(new Verb("view open check", (Word n, Engine t) -> {
 			if (n.represents == t.protag.inventory) {
@@ -215,13 +248,22 @@ public class Main {
 			}
 		}, null));
 
+		Terminal.print(".");
+
 		game.addWord(new Word("inventory", game.protag.inventory));
-		game.addWord(new Word("self me", game.protag));
+
+		Terminal.print(".");
+
+		game.addWord(new Word("self me myself player", game.protag));
+
+		Terminal.print(".");
 
 		game.addWord(new Direction("north forwards", "12"));
 		game.addWord(new Direction("south backwards", "10"));
 		game.addWord(new Direction("east right", "21"));
 		game.addWord(new Direction("west left", "01"));
+
+		Terminal.print(".");
 
 		while (true) {
 			game.update();
