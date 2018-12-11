@@ -94,7 +94,7 @@ public class Engine {
 			}
 		}
 		if (protag.thirst < 20 && protag.hunger < 20) {
-			protag.health += protag.health < protag.maxHealth ? 1 : 0;
+			protag.health += protag.health < protag.maxHealth && protag.health > 0 ? 1 : 0;
 		}
 	}
 
