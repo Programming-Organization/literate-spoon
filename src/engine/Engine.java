@@ -143,6 +143,36 @@ public class Engine {
 					break;
 				}
 			}
+			String rCompSub = "";
+			if (o.reference != null) {
+				rCompSub = o.reference.compSub;
+				if (o.reference.health != null && o.reference.health < o.reference.maxHealth
+						&& o.reference.injury != null) {
+					int p = (int) (((float) o.reference.health / (float) o.reference.maxHealth) * 4);
+					switch (o.reference.injury) {
+					case crumples:
+						rCompSub = (p == 3 ? "dented " : p == 2 ? "bent " : p == 1 ? "crumpled-up " : "crushed ")
+								+ o.reference.accessor;
+						break;
+					case shatters:
+						rCompSub = (p == 3 ? "fractured " : p > 0 ? "cracked " : "shattered ")
+								+ o.reference.accessor;
+						break;
+					case squishes:
+						rCompSub = (p == 3 ? "bruised "
+								: p == 2 ? "squashed " : p == 1 ? "compressed " : "trampled ")
+								+ o.reference.accessor;
+						break;
+					case bruises:
+						rCompSub = (p == 3 ? "bruised "
+								: p == 2 ? "damaged " : p == 1 ? "beaten-up " : "pulverized ")
+								+ o.reference.accessor;
+						break;
+					}
+				}
+			}
+
+
 			if (protag.hunger > 0) {
 				if (rand.nextInt(101 - protag.hunger) < 5 && o.reference != null) {
 					compSub = lRandOf(new String[] { "possibly edible", "juicy and tender", "appetizing",
@@ -185,33 +215,35 @@ public class Engine {
 
 			try {
 				Object r = o.reference;
-				if (x1 == 1) {
-					if (x2 == 0) {
-						Terminal.print(lRandOf(
-								new String[] { " as well as a " + compSub + " " + o.description + " " + r.compSub,
-										" and a " + compSub + " " + o.description + " " + r.compSub }));
+				if (r != null) {
+					if (x1 == 1) {
+						if (x2 == 0) {
+							Terminal.print(lRandOf(
+									new String[] { " as well as a " + compSub + " " + o.description + " " + rCompSub,
+											" and a " + compSub + " " + o.description + " " + rCompSub }));
+						} else {
+							Terminal.print(", and a " + compSub + " " + o.description + " " + rCompSub);
+						}
+					} else if (x1 == 2) {
+						if (x2 == 0) {
+							Terminal.print(
+									uRandOf(new String[] { "there is a " + compSub, "You notice a " + compSub }));
+						} else {
+							Terminal.print(", a " + compSub);
+						}
 					} else {
-						Terminal.print(", and a " + compSub + " " + o.description + " " + r.compSub);
-					}
-				} else if (x1 == 2) {
-					if (x2 == 0) {
 						Terminal.print(
-								uRandOf(new String[] { "there is a " + compSub, "You notice a " + compSub }));
-					} else {
-						Terminal.print(", a " + compSub);
+								uRandOf(new String[] { "there is a " + compSub + " " + o.description + " " + rCompSub,
+										o.description + " " + rCompSub + ", there is a " + compSub,
+										"You notice a " + compSub + " " + o.description + " " + rCompSub }));
 					}
-				} else {
-					Terminal.print(
-							uRandOf(new String[] { "there is a " + compSub + " " + o.description + " " + r.compSub,
-									o.description + " " + r.compSub + ", there is a " + compSub,
-									"You notice a " + compSub + " " + o.description + " " + r.compSub }));
-				}
-				if (x1 > 0) {
-					x1--;
-				}
-				if (x1 == 0) {
-					x2 = 0;
-					Terminal.println(".");
+					if (x1 > 0) {
+						x1--;
+					}
+					if (x1 == 0) {
+						x2 = 0;
+						Terminal.println(".");
+					}
 				}
 			} catch (NullPointerException e) {
 
@@ -403,6 +435,12 @@ public class Engine {
 					o1 = o;
 					foundObject = true;
 				}
+				for (Object obj : o.container) {
+					if (obj.accessor.equals(words.get(1))) {
+						o1 = obj;
+						foundObject = true;
+					}
+				}
 				if (words.size() > 2 && o.accessor.equals(words.get(2))) {
 					o2 = o;
 				}
@@ -439,7 +477,7 @@ public class Engine {
 
 			if (found) {
 				try {
-					w0.perform(w1, this);// fills out word's function
+					w0.perform(w1, prepUsed[0], this);// fills out word's function
 				} catch(Exception exc) {
 					Terminal.println(uRandOf(new String[] {"I'm not sure what you want me to do.", "Who, me?", "Error. Please try again.", "This isn't going to work out."}));
 					continue;

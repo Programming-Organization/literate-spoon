@@ -82,11 +82,16 @@ public class Main {
 
 			if(!o.alive) {
 				t.protag.hunger -= o.consumability;
+
+				if (o.drinkability != null) {
+					t.protag.thirst -= o.drinkability;
+				}
+
 				if (o.consumability < 0) {
 					if(o.poisonous) {
-						t.protag.effects.add(new Effect((p) -> { //lambda
+						t.protag.effects.add(new Effect((p) -> {
 							t.protag.health--;
-						}, 30, "That was painful to eat.")); //end lambda
+						}, 30, "That was painful to eat."));
 					} else {
 						t.protag.effects.add(new Effect((p) -> {//lambda
 							t.protag.health += o.consumability * 2;
@@ -122,7 +127,7 @@ public class Main {
 									"You now can see that there is a " + o.container.get(0).compSub }));
 				if (o.container.size() == 2) {
 					Terminal.print(" as well as a " + o.container.get(1).compSub);
-				} else if (o.container.size() > 2) {
+				} else if(o.container.size() > 2){
 					for (int i = 1; i < o.container.size() - 1; i++) {
 						Terminal.print(", a ");
 						Terminal.print(o.container.get(i).compSub);
@@ -223,23 +228,20 @@ public class Main {
 			}
 
 			if(t.protag.inventory.contains(o)) {
-			t.protag.inventory.remove(o);
+				t.protag.inventory.remove(o);
+				o.description = "on";
+				o.reference = t.protag.currentRoom.floor;
 
-			if (t.protag.rightHand.equals(o))
-				t.protag.rightHand = t.protag.fist;
+				if (t.protag.rightHand.equals(o))
+					t.protag.rightHand = t.protag.fist;
 
-			t.protag.currentRoom.objects.add(o);
-			Terminal.println("You dropped the " + o.accessor + ".");
-			try {
-				o.reference.compSub = t.lRandOf(new String[] { "floor", "ground" });
-				o.reference.description = o.referencer.description.replace(" a", " the");
-			} catch (Exception e) {
-
-			}
+				t.protag.currentRoom.objects.add(o);
+				Terminal.println("You dropped the " + o.accessor + ".");
 			} else {
 				Terminal.println("You don't have a " + o.accessor + " to drop.");
 			}
 		})); // honestly, what god can there even be anymore
+
 
 		game.addWord(new Verb("view open check", (Word n, Engine t) -> {
 			if (n.represents == t.protag.inventory) {
