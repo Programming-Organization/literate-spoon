@@ -149,7 +149,7 @@ public class Main {
 		game.addWord(new Verb("attack assault assail hit pummel strike kill destroy ", null, (Object o, Engine t) -> { //begin lambda
 			if (o.equals(t.protag)) {
 				t.protag.health = 0;
-				Terminal.println("You killed yourself." + t.uRandOf(new String[] { "Fantastic work.",
+				Terminal.println("You killed yourself. " + t.uRandOf(new String[] { "Fantastic work.",
 						"What a glorious day.", "I hope it hurt.", "Great job.", "Nice going.", "I hope you meant to do that."}));
 				return;
 			}
