@@ -5,4 +5,4 @@
 
 literate-spoon is a text adventure made in java. To contribute, see CONTRIBUTING.md.
 
-(Join us on Gitter!)[https://gitter.im/Programming-Organization/literate-spoon]
+[Join us on Gitter!](https://gitter.im/Programming-Organization/literate-spoon)
